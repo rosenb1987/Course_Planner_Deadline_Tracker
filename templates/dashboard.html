@@ -1,0 +1,627 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Dashboard</h2>
+
+<div class="grid">
+  <!-- Left side: form to add a new task + module progress summary -->
+  <div class="card">
+    <h3>Add Coursework / Deadline</h3>
+
+    <!-- Main "add task" form -->
+    <form method="post" class="form">
+      <label>Module name</label>
+      <input name="module_name" placeholder="e.g. 6COSC023W" required>
+
+      <label>Task title</label>
+      <input name="title" placeholder="e.g. IPD slides" required>
+
+      <label>Due date</label>
+      <input id="addDueDate" name="due_date" type="date" required>
+
+      <label>Due time</label>
+      <input id="addDueTime" name="due_time" type="time" value="23:59" required>
+
+      <label>Priority</label>
+      <select id="addPriority" name="priority" required>
+        <option value="Low">Low</option>
+        <option value="Medium" selected>Medium</option>
+        <option value="High">High</option>
+      </select>
+
+      <!-- Small hint that appears when the system forces priority to High -->
+      <small class="muted" id="autoPriorityNote" style="display:none;">
+        Due today or past the deadline time → Priority will be set to <strong>High</strong> automatically.
+      </small>
+
+      <label>Description (optional)</label>
+      <textarea name="description" rows="3" placeholder="Short notes..."></textarea>
+
+      <button type="submit">Add task</button>
+    </form>
+
+    <!-- Module summary: progress per module (completed / total) -->
+    {% set ms = module_summary if module_summary is defined else [] %}
+    <div class="module-panel">
+      <div class="module-header">
+        <div class="module-title">Modules</div>
+        <div class="module-subtitle">Progress per module</div>
+      </div>
+
+      {% if ms and ms|length > 0 %}
+        <div class="module-list">
+          {% for m in ms %}
+            <div class="module-row">
+              <div class="module-row-top">
+                <div class="module-name">{{ m["module"] }}</div>
+                <div class="module-stats">{{ m["completed"] }}/{{ m["total"] }} ({{ m["percent"] }}%)</div>
+              </div>
+
+              <!-- Simple progress bar fill based on percent -->
+              <div class="module-progress">
+                <div class="module-progress-fill" style="width: {{ m['percent'] }}%;"></div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="muted" style="margin:8px 0 0 0;">No modules yet. Add a task to begin tracking module progress.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Right side: attention panel + progress stats + filters + task list -->
+  <div class="card">
+    <h3>Your Tasks</h3>
+
+    <!-- "Attention" list (overdue / due today / due soon). Limited to top 5 each. -->
+    {% set att = attention if attention is defined else {"overdue": [], "due_today": [], "due_soon": []} %}
+    {% set od = att["overdue"] if att["overdue"] is defined else [] %}
+    {% set dt = att["due_today"] if att["due_today"] is defined else [] %}
+    {% set ds = att["due_soon"] if att["due_soon"] is defined else [] %}
+
+    {% if (od and od|length > 0) or (dt and dt|length > 0) or (ds and ds|length > 0) %}
+      <div class="alert-panel">
+        <div class="alert-title">⚠️ Attention</div>
+
+        {% if od and od|length > 0 %}
+          <div class="alert-block">
+            <div class="alert-label danger">Overdue ({{ od|length }})</div>
+            <ul class="alert-list">
+              {% for x in od[:5] %}
+                <li>
+                  <strong>{{ x["title"] }}</strong>
+                  <span class="muted">({{ x["module_name"] }})</span>
+                  — due {{ x["deadline_display"] }}
+                </li>
+              {% endfor %}
+              {% if od|length > 5 %}
+                <li class="muted">…and {{ od|length - 5 }} more overdue</li>
+              {% endif %}
+            </ul>
+          </div>
+        {% endif %}
+
+        {% if dt and dt|length > 0 %}
+          <div class="alert-block">
+            <div class="alert-label warning">Due today ({{ dt|length }})</div>
+            <ul class="alert-list">
+              {% for x in dt[:5] %}
+                <li>
+                  <strong>{{ x["title"] }}</strong>
+                  <span class="muted">({{ x["module_name"] }})</span>
+                  — due {{ x["deadline_display"] }}
+                </li>
+              {% endfor %}
+              {% if dt|length > 5 %}
+                <li class="muted">…and {{ dt|length - 5 }} more due today</li>
+              {% endif %}
+            </ul>
+          </div>
+        {% endif %}
+
+        {% if ds and ds|length > 0 %}
+          <div class="alert-block">
+            <div class="alert-label info">Due soon ({{ ds|length }})</div>
+            <ul class="alert-list">
+              {% for x in ds[:5] %}
+                <li>
+                  <strong>{{ x["title"] }}</strong>
+                  <span class="muted">({{ x["module_name"] }})</span>
+                  — due {{ x["deadline_display"] }}
+                </li>
+              {% endfor %}
+              {% if ds|length > 5 %}
+                <li class="muted">…and {{ ds|length - 5 }} more due soon</li>
+              {% endif %}
+            </ul>
+          </div>
+        {% endif %}
+      </div>
+    {% endif %}
+
+    {% if tasks %}
+
+      <!-- Progress section: quick overview of completion + deadline pressure -->
+      <div class="stats-panel">
+        <div class="stats-header">
+          <div class="stats-title">Progress</div>
+          <div class="stats-percent">{{ stats["completion_percent"] }}% completed</div>
+        </div>
+
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: {{ stats['completion_percent'] }}%;"></div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-box">
+            <div class="stat-number">{{ stats["total"] }}</div>
+            <div class="stat-label">Total</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-number">{{ stats["todo"] }}</div>
+            <div class="stat-label">To do</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-number">{{ stats["in_progress"] }}</div>
+            <div class="stat-label">In progress</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-number">{{ stats["completed"] }}</div>
+            <div class="stat-label">Completed</div>
+          </div>
+          <div class="stat-box warning">
+            <div class="stat-number">{{ stats["due_soon"] }}</div>
+            <div class="stat-label">Due soon</div>
+          </div>
+          <div class="stat-box danger">
+            <div class="stat-number">{{ stats["overdue"] }}</div>
+            <div class="stat-label">Overdue</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters row: lets me cut down the list quickly without reloading -->
+      <div class="filters">
+        <div class="filters-row">
+
+          <div class="filter-block">
+            <label>Filter</label>
+            <select id="filterState" onchange="applyFiltersAndSort()">
+              <option value="all">All tasks</option>
+              <option value="overdue">Overdue</option>
+              <option value="due_today">Due today</option>
+              <option value="due_soon">Due soon</option>
+              <option value="completed">Completed</option>
+              <option value="normal">Normal</option>
+            </select>
+          </div>
+
+          <div class="filter-block">
+            <label>Module</label>
+            <select id="filterModule" onchange="applyFiltersAndSort()">
+              <option value="all">All modules</option>
+              {% for m in unique_modules %}
+                <option value="{{ m }}">{{ m }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="filter-block">
+            <label>Priority</label>
+            <select id="filterPriority" onchange="applyFiltersAndSort()">
+              <option value="all">All priorities</option>
+              <option value="High">High</option>
+              <option value="Medium">Medium</option>
+              <option value="Low">Low</option>
+            </select>
+          </div>
+
+          <div class="filter-block">
+            <label>Sort</label>
+            <select id="sortBy" onchange="applyFiltersAndSort()">
+              <option value="due_asc">Deadline (soonest)</option>
+              <option value="due_desc">Deadline (latest)</option>
+              <option value="priority">Priority</option>
+              <option value="status">Status</option>
+              <option value="module">Module</option>
+              <option value="title">Title (A–Z)</option>
+            </select>
+          </div>
+
+          <div class="filter-block grow">
+            <label>Search</label>
+            <input id="filterSearch" placeholder="Search by title or description..." oninput="applyFiltersAndSort()">
+          </div>
+
+          <div class="filter-block toggle-block">
+            <label>Completed</label>
+            <div class="toggle-row">
+              <label class="toggle">
+                <input type="checkbox" id="hideCompleted" onchange="applyFiltersAndSort()">
+                <span class="toggle-slider"></span>
+              </label>
+              <span class="toggle-text">Hide</span>
+            </div>
+          </div>
+
+          <div class="filter-block actions-block">
+            <label>&nbsp;</label>
+            <div class="actions-row">
+              <a class="btn-link" href="{{ url_for('export_csv') }}">Export CSV</a>
+              <button type="button" onclick="resetFilters()">Reset</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Main task list (everything is rendered server-side, then filtered client-side) -->
+      <div class="task-list" id="taskList">
+        {% for t in tasks %}
+          <div class="task {{ t['deadline_state'] }}"
+               id="task-{{ t['id'] }}"
+               data-id="{{ t['id'] }}"
+               data-state="{{ t['deadline_state'] }}"
+               data-module="{{ t['module_name'] }}"
+               data-title="{{ (t['title'] or '')|lower }}"
+               data-desc="{{ (t['description'] or '')|lower }}"
+               data-deadline="{{ t['due_iso'] }}"
+               data-status="{{ t['status'] }}"
+               data-priority="{{ t['priority'] if t['priority'] else 'Medium' }}">
+
+            <div class="task-main">
+              <div class="task-title">{{ t["title"] }}</div>
+
+              <div class="task-meta">
+                <span class="pill">{{ t["module_name"] }}</span>
+                <span class="pill">Due: {{ t["deadline_display"] }}</span>
+
+                {% if t["deadline_state"] == "due_today" %}
+                  <span class="pill due-today-pill">DUE TODAY</span>
+                {% endif %}
+
+                <span class="pill priority-pill {{ (t['priority'] or 'Medium')|lower }}">
+                  Priority: {{ t["priority"] or "Medium" }}
+                </span>
+
+                <span class="pill">Created: {{ t["created_at_display"] }}</span>
+                <span class="pill status">{{ t["status"] }}</span>
+              </div>
+
+              {% if t["description"] %}
+                <div class="task-desc">{{ t["description"] }}</div>
+              {% endif %}
+
+              <!-- Inline edit form (hidden by default, toggled with the Edit button) -->
+              <div class="edit-box" id="edit-box-{{ t['id'] }}" style="display:none; margin-top:12px;">
+                <form method="post" action="{{ url_for('edit_task', task_id=t['id']) }}" class="form">
+                  <label>Module name</label>
+                  <input name="module_name" value="{{ t['module_name'] }}" required>
+
+                  <label>Task title</label>
+                  <input name="title" value="{{ t['title'] }}" required>
+
+                  <label>Due date</label>
+                  <input class="editDueDate" data-task-id="{{ t['id'] }}" name="due_date" type="date" value="{{ t['due_date'] }}" required>
+
+                  <label>Due time</label>
+                  <input class="editDueTime" data-task-id="{{ t['id'] }}" name="due_time" type="time" value="{{ t['due_time'] }}" required>
+
+                  <label>Priority</label>
+                  <select class="editPriority" data-task-id="{{ t['id'] }}" name="priority" required>
+                    <option value="Low" {% if (t["priority_stored"] or "Medium")=="Low" %}selected{% endif %}>Low</option>
+                    <option value="Medium" {% if (t["priority_stored"] or "Medium")=="Medium" %}selected{% endif %}>Medium</option>
+                    <option value="High" {% if (t["priority_stored"] or "Medium")=="High" %}selected{% endif %}>High</option>
+                  </select>
+
+                  <label>Description (optional)</label>
+                  <textarea name="description" rows="3">{{ t['description'] or '' }}</textarea>
+
+                  <div style="display:flex; gap:8px; margin-top:6px;">
+                    <button type="submit">Save changes</button>
+                    <button type="button" class="danger" onclick="toggleEdit({{ t['id'] }})">Cancel</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <!-- Task actions: status update + edit + delete -->
+            <div class="task-actions">
+              <form method="post" action="{{ url_for('update_status', task_id=t['id']) }}">
+                <select name="status">
+                  <option {% if t["status"]=="To do" %}selected{% endif %}>To do</option>
+                  <option {% if t["status"]=="In progress" %}selected{% endif %}>In progress</option>
+                  <option {% if t["status"]=="Completed" %}selected{% endif %}>Completed</option>
+                </select>
+                <button type="submit">Update</button>
+              </form>
+
+              <button type="button" onclick="toggleEdit({{ t['id'] }})">Edit</button>
+
+              <!-- Delete uses a custom modal (no annoying browser confirm popup) -->
+              <form method="post"
+                    action="{{ url_for('delete_task', task_id=t['id']) }}"
+                    class="delete-form"
+                    data-title="{{ t['title']|e }}">
+                <button class="danger" type="submit">Delete</button>
+              </form>
+            </div>
+
+          </div>
+        {% endfor %}
+      </div>
+
+      <!-- Little footer text that shows how many tasks are currently visible after filtering -->
+      <p class="muted" id="resultsNote" style="margin-top:10px;"></p>
+
+    {% else %}
+      <!-- Empty-state version of progress panel (so the UI doesn't look dead) -->
+      <div class="stats-panel">
+        <div class="stats-header">
+          <div class="stats-title">Progress</div>
+          <div class="stats-percent">0% completed</div>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width:0%;"></div>
+        </div>
+        <p class="muted" style="margin:8px 0 0 0;">No tasks yet. Add one on the left.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Custom delete confirmation modal -->
+<div class="modal-overlay" id="deleteModal" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
+    <div class="modal-title" id="deleteModalTitle">Delete task?</div>
+    <div class="modal-text" id="deleteModalText">
+      Are you sure you want to delete this task?
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="modal-btn" id="deleteCancelBtn">Cancel</button>
+      <button type="button" class="modal-btn danger" id="deleteConfirmBtn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Show/hide the inline edit form inside a task card
+  function toggleEdit(taskId) {
+    const box = document.getElementById("edit-box-" + taskId);
+    if (!box) return;
+    box.style.display = (box.style.display === "none") ? "block" : "none";
+  }
+
+  // Filter + search + sort happens client-side for speed (no refresh needed)
+  function applyFiltersAndSort() {
+    const stateValue = document.getElementById("filterState")?.value || "all";
+    const moduleValue = document.getElementById("filterModule")?.value || "all";
+    const priorityValue = document.getElementById("filterPriority")?.value || "all";
+    const searchValue = (document.getElementById("filterSearch")?.value || "").toLowerCase().trim();
+    const sortBy = document.getElementById("sortBy")?.value || "due_asc";
+    const hideCompleted = document.getElementById("hideCompleted")?.checked || false;
+
+    const list = document.getElementById("taskList");
+    if (!list) return;
+
+    const tasks = Array.from(list.querySelectorAll(".task"));
+
+    let visible = [];
+    tasks.forEach(task => {
+      const taskState = task.getAttribute("data-state");
+      const taskModule = task.getAttribute("data-module");
+      const taskTitle = task.getAttribute("data-title") || "";
+      const taskDesc  = task.getAttribute("data-desc") || "";
+      const taskStatus = task.getAttribute("data-status") || "";
+      const taskPriority = task.getAttribute("data-priority") || "Medium";
+
+      const matchesState = (stateValue === "all") || (taskState === stateValue);
+      const matchesModule = (moduleValue === "all") || (taskModule === moduleValue);
+      const matchesPriority = (priorityValue === "all") || (taskPriority === priorityValue);
+      const matchesSearch = (searchValue === "") || (taskTitle.includes(searchValue) || taskDesc.includes(searchValue));
+      const matchesHideCompleted = (!hideCompleted) || (taskStatus !== "Completed");
+
+      const show = matchesState && matchesModule && matchesPriority && matchesSearch && matchesHideCompleted;
+      task.style.display = show ? "flex" : "none";
+      if (show) visible.push(task);
+    });
+
+    // Small sort helpers so the ordering is consistent
+    const statusOrder = { "To do": 1, "In progress": 2, "Completed": 3 };
+    const priorityOrder = { "High": 1, "Medium": 2, "Low": 3 };
+
+    visible.sort((a, b) => {
+      const deadA = a.getAttribute("data-deadline") || "";
+      const deadB = b.getAttribute("data-deadline") || "";
+      const moduleA = (a.getAttribute("data-module") || "").toLowerCase();
+      const moduleB = (b.getAttribute("data-module") || "").toLowerCase();
+      const titleA = (a.getAttribute("data-title") || "").toLowerCase();
+      const titleB = (b.getAttribute("data-title") || "").toLowerCase();
+      const statusA = a.getAttribute("data-status") || "To do";
+      const statusB = b.getAttribute("data-status") || "To do";
+      const prA = a.getAttribute("data-priority") || "Medium";
+      const prB = b.getAttribute("data-priority") || "Medium";
+
+      if (sortBy === "due_asc") return deadA.localeCompare(deadB);
+      if (sortBy === "due_desc") return deadB.localeCompare(deadA);
+      if (sortBy === "module") return moduleA.localeCompare(moduleB) || deadA.localeCompare(deadB);
+      if (sortBy === "title") return titleA.localeCompare(titleB) || deadA.localeCompare(deadB);
+      if (sortBy === "status") return (statusOrder[statusA] - statusOrder[statusB]) || deadA.localeCompare(deadB);
+      if (sortBy === "priority") return (priorityOrder[prA] - priorityOrder[prB]) || deadA.localeCompare(deadB);
+      return 0;
+    });
+
+    // Re-append items in the new order
+    visible.forEach(task => list.appendChild(task));
+
+    // Update footer note
+    const note = document.getElementById("resultsNote");
+    if (note) note.textContent = visible.length + " task(s) shown";
+  }
+
+  // Reset all controls back to defaults
+  function resetFilters() {
+    if (document.getElementById("filterState")) document.getElementById("filterState").value = "all";
+    if (document.getElementById("filterModule")) document.getElementById("filterModule").value = "all";
+    if (document.getElementById("filterPriority")) document.getElementById("filterPriority").value = "all";
+    if (document.getElementById("sortBy")) document.getElementById("sortBy").value = "due_asc";
+    if (document.getElementById("filterSearch")) document.getElementById("filterSearch").value = "";
+    if (document.getElementById("hideCompleted")) document.getElementById("hideCompleted").checked = false;
+    applyFiltersAndSort();
+  }
+
+  // Auto priority logic: if the deadline is today or already passed, force priority to High
+  function todayYMD() {
+    const t = new Date();
+    const yyyy = t.getFullYear();
+    const mm = String(t.getMonth() + 1).padStart(2, "0");
+    const dd = String(t.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  function buildDeadline(dateYMD, timeHM) {
+    if (!dateYMD) return null;
+    const t = (timeHM && /^\d{2}:\d{2}$/.test(timeHM)) ? timeHM : "23:59";
+    const dt = new Date(`${dateYMD}T${t}:00`);
+    return isNaN(dt.getTime()) ? null : dt;
+  }
+
+  function shouldForceHigh(dateYMD, timeHM) {
+    if (!dateYMD) return false;
+    const dl = buildDeadline(dateYMD, timeHM);
+    if (!dl) return false;
+
+    const now = new Date();
+    const isToday = (dateYMD === todayYMD());
+    if (dl.getTime() < now.getTime()) return true;
+    if (isToday) return true;
+    return false;
+  }
+
+  // Wire auto-priority behaviour for the "add task" form
+  function wireAddAutoPriority() {
+    const dueDate = document.getElementById("addDueDate");
+    const dueTime = document.getElementById("addDueTime");
+    const pr = document.getElementById("addPriority");
+    const note = document.getElementById("autoPriorityNote");
+    if (!dueDate || !pr) return;
+
+    function update() {
+      const force = shouldForceHigh(dueDate.value, dueTime ? dueTime.value : "23:59");
+      if (force) {
+        pr.value = "High";
+        pr.disabled = true;
+        if (note) note.style.display = "block";
+      } else {
+        pr.disabled = false;
+        if (note) note.style.display = "none";
+      }
+    }
+
+    dueDate.addEventListener("change", update);
+    if (dueTime) dueTime.addEventListener("change", update);
+    update();
+  }
+
+  // Same auto-priority logic, but for edit mode on a specific task
+  function updateEditAutoPriority(taskId) {
+    const dueDate = document.querySelector(`.editDueDate[data-task-id="${taskId}"]`);
+    const dueTime = document.querySelector(`.editDueTime[data-task-id="${taskId}"]`);
+    const pr  = document.querySelector(`.editPriority[data-task-id="${taskId}"]`);
+    if (!dueDate || !pr) return;
+
+    const force = shouldForceHigh(dueDate.value, dueTime ? dueTime.value : "23:59");
+    if (force) {
+      pr.value = "High";
+      pr.disabled = true;
+    } else {
+      pr.disabled = false;
+    }
+  }
+
+  // Wrap toggleEdit so it also applies auto-priority rules when the edit form opens
+  const _oldToggleEdit = window.toggleEdit;
+  window.toggleEdit = function(taskId) {
+    _oldToggleEdit(taskId);
+    updateEditAutoPriority(taskId);
+
+    const dueDate = document.querySelector(`.editDueDate[data-task-id="${taskId}"]`);
+    const dueTime = document.querySelector(`.editDueTime[data-task-id="${taskId}"]`);
+
+    // Only wire listeners once per edit form
+    if (dueDate && !dueDate.dataset.wired) {
+      dueDate.addEventListener("change", () => updateEditAutoPriority(taskId));
+      dueDate.dataset.wired = "1";
+    }
+    if (dueTime && !dueTime.dataset.wired) {
+      dueTime.addEventListener("change", () => updateEditAutoPriority(taskId));
+      dueTime.dataset.wired = "1";
+    }
+  };
+
+  // Delete confirmation uses a custom modal so it looks nicer than the browser popup
+  let pendingDeleteForm = null;
+
+  function openDeleteModal(formEl) {
+    pendingDeleteForm = formEl;
+    const modal = document.getElementById("deleteModal");
+    const text = document.getElementById("deleteModalText");
+    const title = formEl?.dataset?.title || "";
+
+    if (text) {
+      text.textContent = title
+        ? `Are you sure you want to delete "${title}"?`
+        : "Are you sure you want to delete this task?";
+    }
+
+    if (modal) {
+      modal.style.display = "flex";
+      modal.setAttribute("aria-hidden", "false");
+    }
+  }
+
+  function closeDeleteModal() {
+    const modal = document.getElementById("deleteModal");
+    if (modal) {
+      modal.style.display = "none";
+      modal.setAttribute("aria-hidden", "true");
+    }
+    pendingDeleteForm = null;
+  }
+
+  function wireDeleteConfirm() {
+    // Intercept delete form submits so we can show our modal first
+    document.querySelectorAll("form.delete-form").forEach(form => {
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        openDeleteModal(form);
+      });
+    });
+
+    // Modal buttons
+    document.getElementById("deleteCancelBtn")?.addEventListener("click", closeDeleteModal);
+    document.getElementById("deleteConfirmBtn")?.addEventListener("click", () => {
+      if (pendingDeleteForm) pendingDeleteForm.submit();
+      closeDeleteModal();
+    });
+
+    // Click outside modal to close
+    document.getElementById("deleteModal")?.addEventListener("click", (e) => {
+      if (e.target && e.target.id === "deleteModal") closeDeleteModal();
+    });
+
+    // Escape key closes modal too
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeDeleteModal();
+    });
+  }
+
+  // Initial setup on page load
+  wireAddAutoPriority();
+  wireDeleteConfirm();
+  applyFiltersAndSort();
+</script>
+
+{% endblock %}

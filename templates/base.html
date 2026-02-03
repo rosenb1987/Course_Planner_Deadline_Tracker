@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{ title if title else "Course Planner" }}</title>
+
+  <!-- Load main stylesheet.
+       Added cache-busting parameter so browser always picks latest CSS during development -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=cache_bust) }}">
+
+  {% block head %}{% endblock %}
+</head>
+<body>
+
+  <!-- Top navigation bar shown on every page -->
+  <header class="topbar">
+    <div class="brand">
+      {% if session.get("user_id") %}
+        <!-- When logged in, clicking the title returns to dashboard -->
+        <a class="link" href="{{ url_for('dashboard') }}" style="font-weight:700; text-decoration:none;">
+          Course Planner & Deadline Tracker
+        </a>
+      {% else %}
+        <!-- Static title shown on login/register pages -->
+        Course Planner & Deadline Tracker
+      {% endif %}
+    </div>
+
+    <div class="nav">
+      {% if session.get("user_id") %}
+        <!-- Display logged-in username -->
+        <span class="user">Hi, {{ session.get("username") }}</span>
+        <a class="link" href="{{ url_for('logout') }}">Logout</a>
+      {% else %}
+        <!-- Links visible only when user is not logged in -->
+        <a class="link" href="{{ url_for('login') }}">Login</a>
+        <a class="link" href="{{ url_for('register') }}">Register</a>
+      {% endif %}
+    </div>
+  </header>
+
+  <!-- Main page container where each page injects its own content -->
+  <main class="container">
+
+    <!-- Flash messages used to show feedback after actions (add/edit/delete etc.) -->
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="flash">
+          {% for m in messages %}
+            <div class="flash-item">{{ m }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <!-- Page-specific content will be inserted here -->
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Extra scripts can be injected by child templates when needed -->
+  {% block scripts %}{% endblock %}
+</body>
+</html>

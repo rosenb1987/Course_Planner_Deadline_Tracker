@@ -1,0 +1,749 @@
+/* 
+   Basic page layout and global styling
+   Setting up consistent box sizing and base fonts
+    */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  background: #f5f6f8; /* Light background to keep the UI clean */
+}
+
+/* Top navigation bar styling */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  background: #0f4c5c;
+  color: #fff;
+}
+
+.brand { 
+  font-weight: 700; 
+}
+
+/* Navigation links on the top bar */
+.nav .link {
+  color: #fff;
+  margin-left: 12px;
+  text-decoration: none;
+}
+
+.nav .user {
+  margin-right: 10px;
+  opacity: 0.9;
+}
+
+/* Main page container to keep content centered */
+.container {
+  max-width: 1100px;
+  margin: 20px auto;
+  padding: 0 14px;
+}
+
+/* Two-column grid layout for dashboard */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 18px;
+}
+
+/* Stack columns on smaller screens */
+@media (max-width: 900px) {
+  .grid { grid-template-columns: 1fr; }
+}
+
+/* 
+   Cards and typography
+   Used for panels and content blocks
+    */
+.card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+}
+
+h2, h3 { 
+  margin-top: 0; 
+}
+
+/* 
+   Form elements styling
+   Keeping inputs clean and readable
+    */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+input, textarea, select {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font: inherit;
+}
+
+textarea { 
+  resize: vertical; 
+}
+
+/* Disabled fields (used for auto-calculated values) */
+select:disabled,
+input:disabled,
+textarea:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+  background: #f3f6f9;
+}
+
+/* 
+   Buttons and clickable elements
+   Shared styling for buttons and link-buttons
+    */
+button,
+.btn-link {
+  height: 40px;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.15s;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  font: inherit;
+}
+
+.btn-link { 
+  display: inline-flex; 
+}
+
+button {
+  background: #1f7a8c;
+  color: #fff;
+}
+
+button:hover,
+.btn-link:hover { 
+  opacity: 0.95; 
+}
+
+/* Red button used for delete actions */
+button.danger { 
+  background: #c1121f; 
+}
+
+/* 
+   Module progress summary panel
+   Displays progress per module
+    */
+.module-panel {
+  margin-top: 16px;
+  padding: 12px;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.module-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 10px;
+}
+
+.module-title {
+  font-weight: 900;
+  font-size: 14px;
+}
+
+.module-subtitle {
+  font-size: 12px;
+  color: #555;
+}
+
+.module-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Individual module row */
+.module-row {
+  background: #fff;
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.module-row-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.module-name {
+  font-weight: 800;
+  font-size: 13px;
+  word-break: break-word;
+}
+
+.module-stats {
+  font-size: 12px;
+  color: #444;
+  white-space: nowrap;
+}
+
+/* Progress bar inside module summary */
+.module-progress {
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  background: #e6edf5;
+  overflow: hidden;
+}
+
+.module-progress-fill {
+  height: 100%;
+  background: #0f4c5c;
+}
+
+/* 
+   Deadline alert banner
+   Shows overdue / due soon / due today tasks
+    */
+.alert-panel {
+  margin: 10px 0 14px 0;
+  padding: 12px;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid rgba(0,0,0,0.08);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+}
+
+.alert-title {
+  font-weight: 900;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Each alert group (overdue, today, soon) */
+.alert-block {
+  border-top: 1px solid rgba(0,0,0,0.06);
+  padding-top: 10px;
+  margin-top: 10px;
+}
+
+.alert-block:first-of-type {
+  border-top: none;
+  padding-top: 0;
+  margin-top: 0;
+}
+
+/* Label pill used for alert headings */
+.alert-label {
+  display: inline-block;
+  font-weight: 900;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  margin-bottom: 8px;
+  background: #eef2f6;
+  color: #1f2937;
+}
+
+/* Color-coded alert labels */
+.alert-label.danger { /* Overdue */
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid rgba(153, 27, 27, 0.2);
+}
+
+.alert-label.warning { /* Due today */
+  background: #ffedd5;
+  color: #9a3412;
+  border: 1px solid rgba(154, 52, 18, 0.2);
+}
+
+.alert-label.info { /* Due soon */
+  background: #e7f5ff;
+  color: #075985;
+  border: 1px solid rgba(7, 89, 133, 0.2);
+}
+
+.alert-list {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.alert-list li {
+  margin: 6px 0;
+  color: #333;
+}
+
+/* 
+   Task cards layout
+   Each task is shown as a flexible card
+    */
+.task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.task {
+  position: relative;
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  padding: 12px;
+  overflow: hidden;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+/* Colored stripe on the left of each task card */
+.task::before {
+  content: "";
+  width: 6px;
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: transparent;
+}
+
+.task-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.task-title { 
+  font-weight: 700; 
+}
+
+/* Small info pills below task title */
+.task-meta {
+  margin-top: 6px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.pill {
+  background: #eef2f6;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  max-width: 100%;
+  word-break: break-word;
+}
+
+.pill.status {
+  background: #e7f5ff;
+  font-weight: 700;
+}
+
+/* Priority color pills */
+.pill.priority-pill { font-weight: 800; }
+
+.pill.priority-pill.high {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid rgba(153, 27, 27, 0.2);
+}
+
+.pill.priority-pill.medium {
+  background: #ffedd5;
+  color: #9a3412;
+  border: 1px solid rgba(154, 52, 18, 0.2);
+}
+
+.pill.priority-pill.low {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid rgba(22, 101, 52, 0.2);
+}
+
+/* Special label for tasks due today */
+.pill.due-today-pill {
+  background: #6d28d9;
+  color: #fff;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+}
+
+.task-desc {
+  margin-top: 8px;
+  color: #444;
+  font-size: 14px;
+}
+
+/*
+   Task action buttons (update / edit / delete)
+   */
+.task-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 220px;
+  flex-shrink: 0;
+}
+
+.task-actions form {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  align-items: stretch;
+}
+
+/* Keep dropdown and button same height */
+.task-actions select,
+.task-actions button {
+  height: 40px;
+}
+
+.task-actions select {
+  flex: 1;
+  min-width: 130px;
+}
+
+/* Make edit and delete buttons full width */
+.task-actions > button,
+.task-actions form:last-child button {
+  width: 100%;
+}
+
+/* Stack actions vertically on small screens */
+@media (max-width: 600px) {
+  .task-actions { width: 100%; min-width: 0; }
+  .task-actions form { flex-direction: column; }
+  .task-actions select,
+  .task-actions button {
+    width: 100%;
+  }
+}
+
+/* 
+   Flash messages (system feedback alerts)
+    */
+.flash { margin-bottom: 12px; }
+
+.flash-item {
+  background: #fff3cd;
+  border: 1px solid #ffeeba;
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 6px;
+}
+
+.muted { color: #666; }
+#autoPriorityNote { margin-top: 2px; }
+
+/* 
+   Deadline visual indicators for task cards
+   Borders change color based on urgency
+    */
+.task.overdue { border: 2px solid #c1121f; background: #ffe5e5; }
+.task.overdue::before { background: #c1121f; }
+
+.task.due_today { border: 2px solid #d00000; background: #ffe8e8; }
+.task.due_today::before { background: #d00000; }
+
+.task.due_soon { border: 2px solid #f48c06; background: #fff3db; }
+.task.due_soon::before { background: #f48c06; }
+
+.task.completed { border: 2px solid #2d6a4f; background: #e6f4ea; }
+.task.completed::before { background: #2d6a4f; }
+
+/* Extra small stripe for high priority tasks */
+.task[data-priority="High"]::after {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: rgba(153, 27, 27, 0.35);
+}
+
+/* 
+   Inline edit form styling
+   */
+.edit-box {
+  background: rgba(255,255,255,0.85);
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.edit-box label {
+  font-size: 13px;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+/* 
+   Progress statistics panel
+   Displays overall completion stats
+   */
+.stats-panel {
+  margin: 12px 0 14px 0;
+  padding: 12px;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.stats-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.stats-title { font-weight: 800; }
+.stats-percent { font-size: 13px; color: #444; }
+
+/* Progress bar */
+.progress-bar {
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  background: #e6edf5;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #1f7a8c;
+}
+
+/* Grid of small statistic boxes */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+@media (max-width: 600px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+.stat-box {
+  background: #fff;
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: 10px;
+  padding: 10px;
+  text-align: center;
+}
+
+.stat-number { font-weight: 900; font-size: 18px; }
+.stat-label { font-size: 12px; color: #555; margin-top: 2px; }
+
+/* Highlight warning/danger stat boxes */
+.stat-box.warning { border-color: rgba(244, 140, 6, 0.35); }
+.stat-box.danger  { border-color: rgba(193, 18, 31, 0.35); }
+
+/* 
+   Filters, sorting and search controls
+   */
+.filters {
+  background: #f8fafc;
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.filters-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: end;
+}
+
+.filter-block label {
+  font-size: 13px;
+  font-weight: 700;
+  display: inline-block;
+  margin-bottom: 4px;
+}
+
+/* Keep inputs consistent width */
+.filter-block select,
+.filter-block input {
+  width: 100%;
+  min-width: 160px;
+}
+
+.filter-block.grow {
+  flex: 1;
+  min-width: 220px;
+}
+
+/* Toggle switch block */
+.filter-block.toggle-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 170px;
+}
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Custom toggle switch */
+.toggle {
+  position: relative;
+  display: inline-block;
+  width: 46px;
+  height: 26px;
+}
+
+.toggle input { display: none; }
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background: #cfd8dc;
+  transition: 0.2s;
+  border-radius: 999px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  top: 3px;
+  background: white;
+  transition: 0.2s;
+  border-radius: 50%;
+}
+
+.toggle input:checked + .toggle-slider { background: #1f7a8c; }
+.toggle input:checked + .toggle-slider:before { transform: translateX(20px); }
+
+.toggle-text {
+  font-size: 13px;
+  color: #444;
+}
+
+/* Stack filters on smaller screens */
+@media (max-width: 900px) {
+  .filters-row > .filter-block { width: 100%; }
+  .filter-block select,
+  .filter-block input { min-width: 0; }
+}
+
+/* 
+   Export and reset action buttons
+    */
+.actions-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.btn-link {
+  background: #0f4c5c;
+  color: #fff;
+  text-decoration: none;
+  min-width: 110px;
+}
+
+/* Accessibility: visible focus outline */
+.btn-link:focus,
+button:focus,
+select:focus,
+input:focus,
+textarea:focus {
+  outline: 2px solid rgba(31, 122, 140, 0.35);
+  outline-offset: 2px;
+}
+
+#resultsNote { font-size: 13px; }
+
+/* 
+   Delete confirmation modal
+   Custom popup for confirming task deletion
+   */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.45);
+  z-index: 9999;
+  padding: 16px;
+}
+
+/* Show modal when aria-hidden is false */
+.modal-overlay[aria-hidden="false"] {
+  display: flex;
+}
+
+.modal {
+  background: #fff;
+  border-radius: 12px;
+  padding: 18px;
+  width: min(500px, 100%);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+}
+
+.modal-title {
+  font-weight: 900;
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+.modal-text {
+  margin-bottom: 14px;
+  color: #444;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* Modal action buttons */
+.modal-btn {
+  background: #1f7a8c;
+  color: #fff;
+  border-radius: 8px;
+  padding: 10px 14px;
+  border: none;
+  cursor: pointer;
+}
+
+.modal-btn.danger {
+  background: #c1121f;
+}
