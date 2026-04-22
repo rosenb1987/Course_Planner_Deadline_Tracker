@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!-- page title showing current module -->
+<h2>Module: {{ module_name }}</h2>
+
+<!-- MODULE STATS (quick overview cards) -->
+<div class="grid stats-grid" style="margin-bottom:20px;">
+  <div class="stat-card">
+    <div class="stat-value">{{ stats.total }}</div>
+    <div class="stat-label">Total Tasks</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value">{{ stats.completed }}</div>
+    <div class="stat-label">Completed</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value">{{ stats.due_today }}</div>
+    <div class="stat-label">Due Today</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value">{{ stats.overdue }}</div>
+    <div class="stat-label">Overdue</div>
+  </div>
+</div>
+
+<!-- PROGRESS BAR -->
+<div class="card" style="margin-bottom:20px;">
+  <h3>Progress</h3>
+
+  <!-- visual progress bar -->
+  <div class="progress-bar">
+    <div class="progress-fill" style="width: {{ stats.completion_percent }}%;"></div>
+  </div>
+
+  <!-- percentage text -->
+  <div class="progress-text">
+    {{ stats.completion_percent }}% completed
+  </div>
+</div>
+
+<!-- TASK LIST FOR THIS MODULE -->
+<div class="card">
+  <h3>Tasks in this module</h3>
+
+  {% if tasks and tasks|length > 0 %}
+    <div class="task-list">
+
+      {% for task in tasks %}
+        <!-- each task card -->
+        <div
+          id="task-{{ task.id }}"
+          class="task-card
+            {% if task.status == 'Completed' %}completed-task{% endif %}
+            {% if task.deadline_state == 'overdue' %}overdue{% endif %}
+            {% if task.deadline_state == 'due_today' %}due-today{% endif %}
+            {% if task.deadline_state == 'due_soon' %}due-soon{% endif %}
+          "
+        >
+
+          <!-- HEADER (title + actions) -->
+          <div class="task-header">
+            <div class="task-title">{{ task.title }}</div>
+
+            <div class="task-actions">
+              <!-- STATUS UPDATE (auto submits on change) -->
+              <form method="POST" action="{{ url_for('update_status', task_id=task.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <select name="status" onchange="this.form.submit()">
+                  <option value="To do" {% if task.status == "To do" %}selected{% endif %}>To do</option>
+                  <option value="In progress" {% if task.status == "In progress" %}selected{% endif %}>In progress</option>
+                  <option value="Completed" {% if task.status == "Completed" %}selected{% endif %}>Completed</option>
+                </select>
+              </form>
+
+              <!-- DELETE TASK -->
+              <form method="POST" action="{{ url_for('delete_task', task_id=task.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn-danger">Delete</button>
+              </form>
+            </div>
+          </div>
+
+          <!-- META INFO (deadline + priority) -->
+          <div class="task-meta">
+            <span>Deadline: {{ task.deadline_display }}</span>
+            <span class="priority {{ task.priority|lower }}">{{ task.priority }}</span>
+          </div>
+
+          <!-- COUNTDOWN (if available) -->
+          {% if task.countdown_text %}
+            <div class="task-countdown">
+              {{ task.countdown_text }}
+            </div>
+          {% endif %}
+
+          <!-- DESCRIPTION (optional) -->
+          {% if task.description %}
+            <div class="task-desc">{{ task.description }}</div>
+          {% endif %}
+
+          <!-- COMPLETED VISUAL INDICATOR -->
+          {% if task.status == "Completed" %}
+            <div class="completed-check">✔ Completed</div>
+          {% endif %}
+
+        </div>
+      {% endfor %}
+
+    </div>
+  {% else %}
+    <!-- shown if no tasks exist for this module -->
+    <p class="muted">No tasks in this module.</p>
+  {% endif %}
+</div>
+
+<!-- BACK BUTTON -->
+<div style="margin-top:20px;">
+  <a class="btn-link" href="{{ url_for('modules') }}">← Back to Modules</a>
+</div>
+
+{% endblock %}

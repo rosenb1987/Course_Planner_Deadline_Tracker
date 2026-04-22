@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!-- main heading for modules page -->
+<h2>Modules</h2>
+
+<div class="grid settings-grid">
+
+  <!-- LEFT: list of modules -->
+  <div class="card">
+    <h3>Your Modules</h3>
+
+    <!-- short explanation of what this page is for -->
+    <p class="muted">
+      View coursework grouped by module to make deadlines easier to manage.
+    </p>
+
+    {% if modules and modules|length > 0 %}
+      <div class="module-list" style="margin-top:14px;">
+
+        {% for m in modules %}
+          <!-- each module is clickable and opens its detail page -->
+          <a
+            class="module-row module-link-row"
+            href="{{ url_for('module_detail', module_name=m['module_name']) }}"
+            style="text-decoration:none; color:inherit;"
+          >
+            <div class="module-row-top">
+              <!-- module name -->
+              <div class="module-name">{{ m["module_name"] }}</div>
+
+              <!-- number of tasks in this module -->
+              <div class="module-stats">
+                {{ m["total_tasks"] }} task{% if m["total_tasks"] != 1 %}s{% endif %}
+              </div>
+            </div>
+
+            <!-- small hint text -->
+            <div class="module-subtitle" style="font-size:13px;">
+              Open module view →
+            </div>
+          </a>
+        {% endfor %}
+
+      </div>
+    {% else %}
+      <!-- shown when no modules exist yet -->
+      <div class="stats-panel" style="margin-top:14px;">
+        <div class="stats-header">
+          <div class="stats-title">No modules yet</div>
+        </div>
+        <p class="muted" style="margin:0;">
+          Add tasks on the dashboard to start grouping work by module.
+        </p>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- RIGHT: explanation panel (useful for report justification) -->
+  <div class="card">
+    <h3>Why this page helps</h3>
+
+    <!-- small summary info -->
+    <div class="settings-summary">
+      <div class="settings-summary-row">
+        <div class="settings-summary-label">Grouped organisation</div>
+        <div class="settings-summary-value">
+          {{ modules|length if modules else 0 }} module{% if modules and modules|length != 1 %}s{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- explanation of features (good for coursework justification) -->
+    <div class="module-panel" style="margin-top:16px;">
+      <div class="module-header">
+        <div class="module-title">Module view features</div>
+        <div class="module-subtitle">Useful for coursework planning and reporting</div>
+      </div>
+
+      <ul class="settings-info-list">
+        <li><strong>Groups tasks by module</strong> for clearer academic organisation.</li>
+        <li><strong>Shows dedicated module pages</strong> with deadlines and progress in one place.</li>
+        <li><strong>Supports relational data grouping</strong>, which is a strong point for your final report.</li>
+      </ul>
+    </div>
+
+    <!-- back navigation -->
+    <div style="margin-top:18px;">
+      <a class="btn-link" href="{{ url_for('dashboard') }}">← Back to Dashboard</a>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}

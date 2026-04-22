@@ -1,26 +1,64 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="card">
-  <h2>Create Account</h2>
+<!-- registration card (centered and fixed width like login page) -->
+<div class="card" style="max-width:420px; margin:40px auto;">
 
-  <!-- Registration form for new users -->
-  <form method="post" class="form">
-    <label>Username</label>
-    <input name="username" required>
+  <!-- page title -->
+  <h2 style="text-align:center;">Create Account</h2>
 
-    <label>Password</label>
-    <input name="password" type="password" required>
+  <!-- registration form -->
+  <form method="post" class="form" autocomplete="off">
 
-    <!-- Submit button to create the account -->
+    <!-- CSRF protection token to prevent form attacks -->
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <label for="username">Username</label>
+    <input
+      id="username"
+      name="username"
+      required
+      minlength="3"
+      maxlength="30"
+      placeholder="Enter username"
+      autocomplete="username"
+    >
+
+    <!-- password must be at least 8 characters -->
+    <label for="password">Password</label>
+    <input
+      id="password"
+      name="password"
+      type="password"
+      required
+      minlength="8"
+      placeholder="Minimum 8 characters"
+      autocomplete="new-password"
+    >
+
+    <!-- confirm password to avoid typing mistakes -->
+    <label for="confirm_password">Confirm Password</label>
+    <input
+      id="confirm_password"
+      name="confirm_password"
+      type="password"
+      required
+      minlength="8"
+      placeholder="Re-enter password"
+      autocomplete="new-password"
+    >
+
+    <!-- submit button to create account -->
     <button type="submit">Register</button>
+
   </form>
 
-  <!-- Link for users who already have an account -->
-  <p class="muted">
-    Already have an account? 
+  <!-- link back to login page if user already has an account -->
+  <p class="muted" style="margin-top:14px; text-align:center;">
+    Already have an account?
     <a href="{{ url_for('login') }}">Login</a>
   </p>
+
 </div>
 
 {% endblock %}

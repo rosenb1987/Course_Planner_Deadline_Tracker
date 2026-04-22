@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!-- page heading -->
+<h2>Settings</h2>
+
+<div class="grid settings-grid">
+
+  <!-- LEFT: form to update planner preferences -->
+  <div class="card">
+    <h3>Planner Preferences</h3>
+
+    <!-- short explanation of what these settings do -->
+    <p class="muted">
+      Adjust how the dashboard and calendar treat upcoming deadlines and reminders.
+    </p>
+
+    <!-- settings form -->
+    <form method="post" class="form" autocomplete="off">
+
+      <!-- CSRF protection token -->
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <!-- number of days to classify a task as "due soon" -->
+      <label for="due_soon_days">Due soon threshold (days)</label>
+      <input
+        id="due_soon_days"
+        name="due_soon_days"
+        type="number"
+        min="1"
+        max="30"
+        value="{{ settings['due_soon_days'] }}"
+        required
+      >
+      <small class="muted">
+        Tasks due within this many days will appear as <strong>Due soon</strong>.
+      </small>
+
+      <!-- reminder lead time before deadline -->
+      <label for="reminder_hours" style="margin-top:10px;">Default reminder time (hours before deadline)</label>
+      <input
+        id="reminder_hours"
+        name="reminder_hours"
+        type="number"
+        min="1"
+        max="168"
+        value="{{ settings['reminder_hours'] }}"
+        required
+      >
+      <small class="muted">
+        This is your default reminder lead time for future reminder features.
+      </small>
+
+      <!-- form actions -->
+      <div class="settings-actions">
+        <button type="submit">Save settings</button>
+
+        <!-- navigation back to dashboard -->
+        <a class="btn-link" href="{{ url_for('dashboard') }}">Back to Dashboard</a>
+      </div>
+    </form>
+  </div>
+
+  <!-- RIGHT: summary of current settings + explanation -->
+  <div class="card">
+    <h3>Current Setup</h3>
+
+    <!-- displays current values stored in the database -->
+    <div class="settings-summary">
+      <div class="settings-summary-row">
+        <div class="settings-summary-label">Due soon threshold</div>
+        <div class="settings-summary-value">
+          {{ settings['due_soon_days'] }} day{% if settings['due_soon_days'] != 1 %}s{% endif %}
+        </div>
+      </div>
+
+      <div class="settings-summary-row">
+        <div class="settings-summary-label">Reminder lead time</div>
+        <div class="settings-summary-value">
+          {{ settings['reminder_hours'] }} hour{% if settings['reminder_hours'] != 1 %}s{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- explanation of how settings impact the system (useful for report) -->
+    <div class="module-panel" style="margin-top:16px;">
+      <div class="module-header">
+        <div class="module-title">How these settings affect the app</div>
+        <div class="module-subtitle">Live behaviour across your planner</div>
+      </div>
+
+      <ul class="settings-info-list">
+        <li>
+          <strong>Dashboard attention panel</strong> uses your due-soon threshold.
+        </li>
+        <li>
+          <strong>Calendar urgency colours</strong> use the same due-soon rule.
+        </li>
+        <li>
+          <strong>Automatic effective priority</strong> also respects this setting.
+        </li>
+        <li>
+          <strong>Reminder hours</strong> are stored now and ready for reminder-system improvements.
+        </li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}
+
+
+

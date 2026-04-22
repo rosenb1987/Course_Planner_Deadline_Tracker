@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!-- header section with month navigation -->
+<div class="card">
+  <div class="calendar-header">
+    <!-- go to previous month -->
+    <a class="btn-link"
+       href="{{ url_for('calendar_view', year=calendar_data.prev_year, month=calendar_data.prev_month) }}">
+      ← Previous
+    </a>
+
+    <!-- current month label -->
+    <h2 class="calendar-title">{{ calendar_data.month_label }}</h2>
+
+    <div class="calendar-header-actions">
+      <!-- export all tasks as calendar -->
+      <a class="btn-link" href="{{ url_for('export_ics') }}">
+        Export Calendar
+      </a>
+
+      <!-- go to next month -->
+      <a class="btn-link"
+         href="{{ url_for('calendar_view', year=calendar_data.next_year, month=calendar_data.next_month) }}">
+        Next →
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- legend explaining colours / states -->
+<div class="card" style="margin-top:16px;">
+  <div class="calendar-legend">
+    <div class="calendar-legend-title">Deadline states</div>
+    <div class="calendar-legend-items">
+      <span class="calendar-legend-pill normal">Normal</span>
+      <span class="calendar-legend-pill due-soon">Due soon</span>
+      <span class="calendar-legend-pill due-today">Due today</span>
+      <span class="calendar-legend-pill overdue">Overdue</span>
+      <span class="calendar-legend-pill completed">Completed</span>
+    </div>
+  </div>
+</div>
+
+<!-- main calendar grid -->
+<div class="calendar-grid">
+
+  <!-- weekday labels (Mon, Tue, etc.) -->
+  {% for label in calendar_data.weekday_labels %}
+    <div class="calendar-weekday">{{ label }}</div>
+  {% endfor %}
+
+  <!-- loop through weeks -->
+  {% for week in calendar_data.weeks %}
+    {% for day in week %}
+
+      <!-- each day cell -->
+      <div class="calendar-day 
+                  {% if not day.is_current_month %}calendar-other-month{% endif %} 
+                  {% if day.is_today %}calendar-today{% endif %}">
+
+        <!-- top part of the day (date + number of tasks) -->
+        <div class="calendar-date-row">
+          <div class="calendar-date">{{ day.day_number }}</div>
+
+          <!-- show number of tasks if any -->
+          {% if day.tasks|length > 0 %}
+            <div class="calendar-count-badge">{{ day.tasks|length }}</div>
+          {% endif %}
+        </div>
+
+        <!-- task list inside the day -->
+        <div class="calendar-tasks">
+
+          {% if day.tasks and day.tasks|length > 0 %}
+            {% for task in day.tasks %}
+
+              <!-- clicking a task takes you back to dashboard and opens it -->
+              <a
+                class="calendar-task-link"
+                href="{{ url_for('go_to_task', task_id=task.id) }}"
+                title="{{ task.title }} | {{ task.module_name }} | Due: {{ task.deadline_display }} | Status: {{ task.status }} | Priority: {{ task.priority }}{% if task.description %} | {{ task.description }}{% endif %}"
+              >
+
+                <!-- task card -->
+                <div class="calendar-task 
+                            {{ task.deadline_state }} 
+                            priority-{{ (task.priority or 'Medium')|lower }} 
+                            {% if task.deadline_state in ['overdue', 'due_today', 'due_soon'] and task.status != 'Completed' %}calendar-task-attention{% endif %}">
+
+                  <!-- top row (title + priority) -->
+                  <div class="calendar-task-top">
+                    <div class="calendar-task-title">{{ task.title }}</div>
+
+                    <div class="calendar-task-top-right">
+                      {% if task.priority %}
+                        <span class="calendar-task-priority">{{ task.priority }}</span>
+                      {% endif %}
+                    </div>
+                  </div>
+
+                  <!-- module name and time -->
+                  <div class="calendar-task-meta">
+                    {{ task.module_name }}{% if task.due_time %} • {{ task.due_time }}{% endif %}
+                  </div>
+
+                  <!-- small flags (overdue, today, etc.) -->
+                  <div class="calendar-task-flags">
+                    {% if task.deadline_state == "overdue" and task.status != "Completed" %}
+                      <span class="calendar-flag overdue">Overdue</span>
+                    {% elif task.deadline_state == "due_today" and task.status != "Completed" %}
+                      <span class="calendar-flag due-today">Today</span>
+                    {% elif task.deadline_state == "due_soon" and task.status != "Completed" %}
+                      <span class="calendar-flag due-soon">Soon</span>
+                    {% endif %}
+
+                    {% if task.status == "Completed" %}
+                      <span class="calendar-flag completed">Completed</span>
+                    {% endif %}
+                  </div>
+
+                  <!-- tooltip with extra info when hovering -->
+                  <div class="calendar-task-tooltip">
+                    <div><strong>{{ task.title }}</strong></div>
+                    <div>Module: {{ task.module_name }}</div>
+                    <div>Deadline: {{ task.deadline_display }}</div>
+                    <div>Status: {{ task.status }}</div>
+                    <div>Priority: {{ task.priority }}</div>
+
+                    {% if task.description %}
+                      <div class="calendar-task-tooltip-desc">{{ task.description }}</div>
+                    {% endif %}
+
+                    <div class="calendar-task-tooltip-tip">
+                      Click to open on the dashboard.
+                    </div>
+                  </div>
+
+                </div>
+              </a>
+
+            {% endfor %}
+          {% else %}
+
+            <!-- shown when no tasks on that day -->
+            <div class="calendar-empty-slot muted">No tasks</div>
+
+          {% endif %}
+        </div>
+      </div>
+
+    {% endfor %}
+  {% endfor %}
+</div>
+
+<!-- small note for mobile users -->
+<div class="calendar-mobile-note muted">
+  Tip: tap a task to open it on the dashboard and jump directly to that task card.
+</div>
+
+<!-- back button -->
+<div style="margin-top:20px;">
+  <a class="btn-link" href="{{ url_for('dashboard') }}">
+    ← Back to Dashboard
+  </a>
+</div>
+
+{% endblock %}
